@@ -1,5 +1,4 @@
 import pandas as pd
-import json
 pd.set_option('display.max_rows', 1000)
 pd.set_option('display.max_columns', 500)
 
@@ -7,8 +6,33 @@ if __name__ == '__main__':
 
     df = pd.read_csv('./data/make_model_database.csv')
 
-    with open('./code/utils/clean_make_models.json') as f:
-        fixes = json.load(f)
+    fixes = { "HD Extended Cab": "",
+    "HD Regular Cab": "",
+    "Sport Hybrid": "",
+    "Bolt EV": "Bolt",
+    "Captiva Sport": "Captiva",
+    "Cruze Limited": "Cruze",
+    "Express 1500 Cargo": "Express Van",
+    "Express 1500 Passenger": "Express Van",
+    "Express 2500 Cargo": "Express Van",
+    "Express 2500 Passenger": "Express Van",
+    "Express 3500 Cargo": "Express Van",
+    "Express 3500 Passenger": "Express Van",
+    "Impala Limited": "Impala",
+    "Spark EV": "Spark",
+    "Bronco Sport": "Bronco",
+    "Hummer EV": "hummer",
+    "Mercedes-AMG": "",
+    "Mercedes-Maybach s 600": "S600",
+    "Mercedes-Maybach": "",
+    "Hybrid": "",
+    "Crew Cab": "",
+    "Extended Cab": "",
+    "Regular Cab": "",
+    "Quad Cab": "",
+    "Club Cab": "",
+    "Supercab": ""
+    }
 
     # Restrict to brands of interest
     keep_makes = ['Acura', 'Audi', 'BMW',
@@ -49,23 +73,12 @@ if __name__ == '__main__':
         df['Model'] = df['Model'].str.replace(rf'\b{key}\b', val, regex=True)
         df['Model'] = df['Model'].apply(lambda x: ' '.join(x.split())) # remove whitespace, if above created any
 
-    # Remove select brands, see README.md
-    df = df.loc[~df.Make.isin(['Ferrari', 'Lamborghini', 'Maserati', 'Rolls-Royce', 'McLaren', 'Bentley',
-                               'Aston Martin', 'Alfa Romeo', 'Daewoo', 'Isuzu', 'Genesis',
-                               'Mayback', 'Lotus', 'Plymouth', 'Oldsmobile'])]
-
-
     # Acura
     df.loc[(df.Make == 'Acura') & (df['Model'].str.contains("MDX")), 'Model'] = 'MDX'
     df.loc[(df.Make == 'Acura') & (df['Model'].str.contains("RLX")), 'Model'] = 'RLX'
 
     # Alfa Romeo
     df.loc[(df.Make == 'Alfa Romeo') & (df['Model'].str.contains("4C")), 'Model'] = '4C'
-
-    # Aston Martin
-    df.loc[(df.Make == 'Aston Martin') & (df['Model'].str.contains("DB9")), 'Model'] = 'DB9'
-    df.loc[(df.Make == 'Aston Martin') & (df['Model'].str.contains("Rapide")), 'Model'] = 'Rapide'
-    df.loc[(df.Make == 'Aston Martin') & (df['Model'].str.contains("Vanquish")), 'Model'] = 'Vanquish'
 
     # Audi
     df.loc[(df.Make == 'Audi') & (df['Model'].str.contains("A3")), 'Model'] = 'A3'
@@ -79,9 +92,6 @@ if __name__ == '__main__':
     df.loc[(df.Make == 'BMW') & (df['Model'].str.contains("X5")), 'Model'] = 'X5'
     df.loc[(df.Make == 'BMW') & (df['Model'].str.contains("X6")), 'Model'] = 'X6'
     df.loc[(df.Make == 'BMW') & (df['Model'].str.contains("Z4")), 'Model'] = 'Z4'
-
-    # Bentley
-    df.loc[(df.Make == 'Bentley') & (df['Model'].str.contains("Azure")), 'Model'] = 'Azure'
 
     # Buick
     df.loc[(df.Make == 'Buick') & (df['Model'].str.contains("Encore")), 'Model'] = 'Encore'
@@ -119,9 +129,6 @@ if __name__ == '__main__':
     df.loc[(df.Make == 'Dodge') & (df['Model'].str.contains("Sprinter")), 'Model'] = 'Sprinter'
     df.loc[(df.Make == 'Dodge') & (df['Model'].str.contains("Ram") & (df['Model'].str.contains("00"))), 'Model'] = 'Ram'
     df.loc[(df.Make == 'Dodge') & (df['Model'].str.contains("Caravan")), 'Model'] = 'Caravan'
-
-    # Ferrari
-    df.loc[(df.Make == 'Ferrari') & (df['Model'].str.contains("458")), 'Model'] = '458'
 
     # Fiat
     df.loc[(df.Make == 'Fiat') & (df['Model'].str.contains("500")), 'Model'] = '500'
@@ -172,11 +179,6 @@ if __name__ == '__main__':
     df.loc[(df.Make == 'Hyundai') & (df['Model'].str.contains("XG300")), 'Model'] = 'XG'
     df.loc[(df.Make == 'Hyundai') & (df['Model'].str.contains("Genesis")), 'Model'] = 'Genesis'
 
-    # Isuzu
-    df.loc[(df.Make == 'Isuzu') & (df['Model'].str.contains("Hombre")), 'Model'] = 'Hombre'
-    df.loc[(df.Make == 'Isuzu') & (df['Model'].str.contains("Rodeo")), 'Model'] = 'Rodeo'
-    df.loc[(df.Make == 'Isuzu') & (df['Model'].str.contains("i-")), 'Model'] = 'i-Series'
-
     # Jeep
     df.loc[(df.Make == 'Jeep') & (df['Model'].str.contains("Cherokee")), 'Model'] = 'Cherokee'
     df.loc[(df.Make == 'Jeep') & (df['Model'].str.contains("Wrangler")), 'Model'] = 'Wrangler'
@@ -187,9 +189,6 @@ if __name__ == '__main__':
     df.loc[(df.Make == 'Kia') & (df['Model'].str.contains("Optima")), 'Model'] = 'Optima'
     df.loc[(df.Make == 'Kia') & (df['Model'].str.contains("Soul")), 'Model'] = 'Soul'
 
-    # Lamborghini
-    df.loc[(df.Make == 'Lamborghini') & (df['Model'].str.contains("Murcielago")), 'Model'] = 'Murcielago'
-
     # Land Rover
     df.loc[(df.Make == 'Land Rover') & (df['Model'].str.contains("Discovery")), 'Model'] = 'Discovery'
     df.loc[(df.Make == 'Land Rover') & (df['Model'].str.contains("Range Rover")), 'Model'] = 'Range Rover'
@@ -199,10 +198,6 @@ if __name__ == '__main__':
 
     # Lincoln
     df.loc[(df.Make == 'Lincoln') & (df['Model'].str.contains("Navigator")), 'Model'] = 'Navigator'
-
-    # Lotus
-    df.loc[(df.Make == 'Lotus') & (df['Model'].str.contains("Evora")), 'Model'] = 'Evora'
-    df.loc[(df.Make == 'Lotus') & (df['Model'].str.contains("Exige")), 'Model'] = 'Exige'
 
     # MINI
     df.loc[(df.Make == 'MINI') & (df['Model'].str.contains("Hardtop")), 'Model'] = 'Hardtop'
@@ -237,9 +232,6 @@ if __name__ == '__main__':
     df.loc[(df.Make == 'Nissan') & (df['Model'].str.contains("Rogue")), 'Model'] = 'Rogue'
     df.loc[(df.Make == 'Nissan') & (df['Model'].str.contains("Titan", case=False)), 'Model'] = 'Titan'
     df.loc[(df.Make == 'Nissan') & (df['Model'].str.contains("Versa")), 'Model'] = 'Versa'
-
-    # Plymouth
-    df.loc[(df.Make == 'Plymouth') & (df['Model'].str.contains("Voyager")), 'Model'] = 'Voyager'
 
     # Pontiac
     df.loc[(df.Make == 'Pontiac') & (df['Model'].str.contains("2009.5")), 'Model'] = 'G6'
