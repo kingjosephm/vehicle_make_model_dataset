@@ -12,6 +12,7 @@ import json
 import argparse
 import numpy as np
 from webdriver_manager.chrome import ChromeDriverManager
+import validators
 
 pd.set_option('display.max_columns', 100)
 pd.set_option('display.max_colwidth', None)
@@ -42,7 +43,16 @@ class timeout:
         signal.alarm(0)
 
 
-def fetch_image_urls(query: str, max_links_to_fetch: int, wd: webdriver, existing_urls: list, sleep_between_interactions: float = 0.1):
+def fetch_image_urls(query: str, number_images: int, wd: webdriver, existing_urls: list, sleep_between_interactions: float = 0.1) -> set:
+    """
+
+    :param query: str, individual query to search
+    :param number_images: int, number of images to search for
+    :param wd: selenium.webdriver.chrome.webdriver.WebDriver
+    :param existing_urls: list, previously-download image links
+    :param sleep_between_interactions: float, patience parameter
+    :return: set, image URLs
+    """
 
     def scroll_to_end(wd):
         wd.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -58,7 +68,7 @@ def fetch_image_urls(query: str, max_links_to_fetch: int, wd: webdriver, existin
     image_count = 0
     results_start = 0
     start = time.time()
-    while image_count < max_links_to_fetch:
+    while image_count < number_images:
 
 
         scroll_to_end(wd)
@@ -79,18 +89,16 @@ def fetch_image_urls(query: str, max_links_to_fetch: int, wd: webdriver, existin
             except Exception:
                 continue
 
-            # extract image urls
+            # extract valid image urls
             actual_images = wd.find_elements_by_css_selector("img.n3VNCb")
             for actual_image in actual_images:
-                if actual_image.get_attribute(
-                    "src"
-                ) and "http" in actual_image.get_attribute("src") and \
-                        actual_image.get_attribute("src") not in existing_urls:
+                if actual_image.get_attribute("src") and "http" in actual_image.get_attribute("src") and \
+                        actual_image.get_attribute("src") not in existing_urls and validators.url(actual_image.get_attribute("src")) == True:
                     image_urls.add(actual_image.get_attribute("src"))
 
             image_count = len(image_urls)
 
-            if len(image_urls) >= max_links_to_fetch:
+            if len(image_urls) >= number_images:
                 print(f"Found: {len(image_urls)} image links, done!")
                 break
         else:
@@ -120,7 +128,16 @@ def fetch_image_urls(query: str, max_links_to_fetch: int, wd: webdriver, existin
 
     return image_urls
 
-def search_and_download(wd, query: str, rootOutput: str, output_path: str, number_images: int =5):
+def search_and_download(wd: webdriver, query: str, root_dir_path: str, make_model_year: str, number_images: int = 100) -> None:
+    """
+    Performs web search for an image query and downloads resulting images
+    :param wd: selenium.webdriver.chrome.webdriver.WebDriver
+    :param query: str, individual query to search
+    :param root_dir_path: str, root directory path
+    :param make_model_year: str, make-model-year
+    :param number_images: int, number of images to search for
+    :return: None
+    """
 
     # Open JSON of image source URLs, if exists already, otherwise initialize
     if os.path.exists('./results/image_sources.json'):
@@ -141,39 +158,44 @@ def search_and_download(wd, query: str, rootOutput: str, output_path: str, numbe
     if res is not None:
 
         for url in res:
+
+            ###### Download image ######
             try:
                 print("Getting image")
                 with timeout(2):
-                    image_content = requests.get(url, verify=False).content
+                    image_content = requests.get(url, verify=True).content
 
             except Exception as e:
                 print(f"ERROR - Could not download {url} - {e}")
+                continue
 
+            ##### Save image #####
             try:
                 image_file = io.BytesIO(image_content)
                 image = Image.open(image_file).convert("RGB")
-                file_path = os.path.join(rootOutput, output_path, hashlib.sha1(image_content).hexdigest()[:10] + ".jpg")
+                img_name = hashlib.sha1(image_content).hexdigest()[:10] + ".jpg"
+                file_path = os.path.join(root_dir_path, make_model_year, img_name)
                 with open(file_path, "wb") as f:
                     image.save(f, "JPEG", quality=85)
                 print(f"SUCCESS - saved {url} - as {file_path}")
 
-                existing_urls[output_path] = url  # only relative path to image
+                # Add URL to successfully-saved image
+                existing_urls[os.path.join(make_model_year, img_name)] = url  # only relative path to image
 
             except Exception as e:
                 print(f"ERROR - Could not save {url} - {e}")
 
-            with open(
-                    './results/image_sources.json',
-                    'w') as j:
-                json.dump(existing_urls, j)
+
+        with open( './results/image_sources.json', 'w') as j:
+            json.dump(existing_urls, j)
 
     else:
         print(f"Failed to return links for term: {query}")
 
 def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('output-path', type=str, help='path to output scraped images')
-    parser.add_argument('num-images', type=str, default=100, help='number of images per detailed make-model class to scrape')
+    parser.add_argument('--output-path', type=str, help='path to output scraped images')
+    parser.add_argument('--num-images', type=str, default=100, help='number of images per detailed make-model class to scrape')
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--top', action='store_true', help='sort df ascending, begin with vehicle makes a -> z')
     group.add_argument('--bottom', action='store_true', help='sort df descending, begin with vehicle makes z -> a')
@@ -232,10 +254,10 @@ def main(opt):
         else:
             fix_model = df.iloc[i, 2]
 
-        output_path = os.path.join(df.iloc[i, 0], fix_model, str(df.iloc[i, 4]))
-        os.makedirs(os.path.join(opt.output_path, output_path), exist_ok=True)
+        make_model_year = os.path.join(df.iloc[i, 0], fix_model, str(df.iloc[i, 4]))
+        os.makedirs(os.path.join(opt.output_path, make_model_year), exist_ok=True)
 
-        search_and_download(wd, query, opt.output_path, output_path, number_images=opt.num_images)
+        search_and_download(wd, query=query, root_dir_path=opt.output_path, make_model_year=make_model_year, number_images=opt.num_images)
 
     caffeine.off()
 
