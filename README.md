@@ -15,11 +15,11 @@
 # Introduction
 This repository develops a large (n=664,678) image dataset of 40 passenger vehicle manufacturers and 574 distinct make-model classes. These data are widely representative of domestic and foreign passenger vehicles commonly found in the U.S., encompassing vehicle make-models manufactured between 2000 and 2021/2.
 
-These data were created for a [computer vision classification task](https://github.com/kingjosephm/vehicle_make_model_classifier) but their use extends potentially beyond this project. These images were gathered by scraping Google, using a representative list of vehicles sold in the U.S. from the [back4app.com](https://github.com/kingjosephm/vehicle_make_model_classifier) database, an open-source dataset providing detailed information about motor vehicles sold in the U.S. in recent decades.
+These data were created for a [computer vision classification task](https://github.com/kingjosephm/vehicle_make_model_classifier) but their use extends potentially beyond this project. These images were gathered by scraping Google, using a representative list of vehicles sold in the U.S. from the [back4app.com](https://www.back4app.com/database/back4app/car-make-model-dataset) database, an open-source dataset providing detailed information about motor vehicles sold in the U.S. in recent decades.
 
 The code used to scrape these images can be found  in the [code](./code) directory. Further explanation about how this code was used and how our images were gathered can be found [below](#dataset-construction).
 
-The data can be downloaded [here](https://boozallen.sharepoint.com/:u:/r/sites/MERGEN/Shared%20Documents/Data/scraped_images.zip?csf=1&web=1&e=xdaZqz).
+If you'd like these data please email me at [king.joseph.m@gmail.com](king.joseph.m@gmail.com).
 
 ## Defining classes
 For the purposes of the study that motivated the construction of these data, we define classes based on the concatenation of make and model, pooling across all years. "Model" here is defined by combining detailed submodels, e.g. "Ford F-150 regular cab", "Ford F-150 crew cab", into one aggregated model, e.g. "Ford F-Series". This produces 574 distinct make-model classes.
